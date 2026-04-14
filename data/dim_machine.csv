@@ -1,0 +1,11 @@
+machine_id,machine_type,line,plant_section
+M001,L,Line A,Section 1
+M002,L,Line A,Section 1
+M003,M,Line A,Section 2
+M004,M,Line B,Section 2
+M005,M,Line B,Section 2
+M006,H,Line B,Section 3
+M007,H,Line C,Section 3
+M008,L,Line C,Section 1
+M009,M,Line C,Section 2
+M010,H,Line A,Section 3

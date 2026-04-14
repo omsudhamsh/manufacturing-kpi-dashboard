@@ -1,0 +1,66 @@
+incident_id,machine_id,shift_date,shift,incident_type,duration_min,severity,reported_by,notes
+INC-0001,M003,2023-01-02,Night,Calibration Error,109,High,B. Patel,Resolved with standard procedure
+INC-0013,M001,2023-01-04,Night,Sensor Malfunction,66,Low,A. Kumar,Machine restarted after cooldown
+INC-0007,M007,2023-01-04,Night,Power Fluctuation,97,High,E. Reddy,Part replacement needed
+INC-0060,M010,2023-01-09,Day,Sensor Malfunction,88,Low,E. Reddy,Part replacement needed
+INC-0020,M002,2023-01-15,Night,Conveyor Stop,85,Medium,A. Kumar,Machine restarted after cooldown
+INC-0031,M010,2023-01-17,Day,Conveyor Stop,116,Critical,B. Patel,Resolved within SLA
+INC-0023,M003,2023-01-28,Day,Material Defect,29,Low,B. Patel,Machine restarted after cooldown
+INC-0065,M003,2023-02-10,Night,Conveyor Stop,88,Medium,C. Sharma,Machine restarted after cooldown
+INC-0036,M006,2023-02-16,Day,Tooling Break,44,Critical,D. Singh,Machine restarted after cooldown
+INC-0002,M003,2023-02-21,Day,Overheating,26,High,D. Singh,Resolved with standard procedure
+INC-0005,M004,2023-02-26,Night,Conveyor Stop,41,Medium,A. Kumar,Recurring issue — escalated to engineering
+INC-0058,M006,2023-02-28,Night,Overheating,40,Medium,A. Kumar,Recurring issue — escalated to engineering
+INC-0044,M003,2023-03-02,Night,Tooling Break,40,Low,B. Patel,Resolved with standard procedure
+INC-0062,M005,2023-03-07,Night,Sensor Malfunction,76,Medium,D. Singh,Root cause under investigation
+INC-0008,M002,2023-03-09,Night,Power Fluctuation,104,Medium,B. Patel,Machine restarted after cooldown
+INC-0059,M008,2023-03-19,Night,Tooling Break,118,Low,C. Sharma,Machine restarted after cooldown
+INC-0035,M002,2023-03-28,Night,Conveyor Stop,37,Medium,C. Sharma,Machine restarted after cooldown
+INC-0019,M005,2023-03-29,Night,Sensor Malfunction,33,Low,C. Sharma,Root cause under investigation
+INC-0051,M001,2023-03-30,Night,Conveyor Stop,50,High,E. Reddy,Part replacement needed
+INC-0028,M009,2023-04-10,Day,Calibration Error,115,High,C. Sharma,"Temporary fix applied, needs follow-up"
+INC-0011,M010,2023-04-14,Day,Mechanical Jam,108,Medium,E. Reddy,"Temporary fix applied, needs follow-up"
+INC-0034,M007,2023-04-20,Night,Sensor Malfunction,26,Low,D. Singh,Machine restarted after cooldown
+INC-0027,M005,2023-04-27,Night,Mechanical Jam,115,High,C. Sharma,Resolved with standard procedure
+INC-0056,M008,2023-04-30,Night,Material Defect,116,Critical,A. Kumar,Required maintenance team intervention
+INC-0032,M004,2023-05-14,Day,Material Defect,95,Medium,D. Singh,Resolved within SLA
+INC-0050,M004,2023-05-16,Day,Sensor Malfunction,22,High,C. Sharma,Part replacement needed
+INC-0009,M001,2023-05-20,Night,Tooling Break,88,Medium,E. Reddy,Root cause under investigation
+INC-0022,M004,2023-05-21,Night,Power Fluctuation,115,Medium,B. Patel,Root cause under investigation
+INC-0052,M007,2023-05-22,Night,Overheating,27,Low,E. Reddy,Machine restarted after cooldown
+INC-0010,M002,2023-05-30,Night,Mechanical Jam,86,Low,D. Singh,"Temporary fix applied, needs follow-up"
+INC-0029,M001,2023-07-13,Night,Conveyor Stop,89,Low,C. Sharma,Root cause under investigation
+INC-0064,M002,2023-07-18,Day,Material Defect,92,Low,A. Kumar,Part replacement needed
+INC-0021,M008,2023-07-18,Night,Calibration Error,117,Medium,A. Kumar,Part replacement needed
+INC-0061,M003,2023-07-26,Night,Mechanical Jam,99,Low,D. Singh,Machine restarted after cooldown
+INC-0063,M009,2023-08-11,Night,Power Fluctuation,44,Medium,A. Kumar,Part replacement needed
+INC-0016,M005,2023-08-11,Day,Sensor Malfunction,83,Low,D. Singh,Resolved with standard procedure
+INC-0003,M007,2023-08-22,Day,Mechanical Jam,94,Low,B. Patel,Resolved within SLA
+INC-0015,M004,2023-09-01,Night,Tooling Break,19,Critical,A. Kumar,Resolved with standard procedure
+INC-0057,M002,2023-09-08,Night,Power Fluctuation,5,Low,C. Sharma,Required maintenance team intervention
+INC-0046,M003,2023-09-12,Day,Sensor Malfunction,43,High,C. Sharma,Resolved within SLA
+INC-0041,M004,2023-09-14,Night,Tooling Break,108,Medium,C. Sharma,Machine restarted after cooldown
+INC-0014,M010,2023-09-17,Night,Material Defect,109,Medium,E. Reddy,Required maintenance team intervention
+INC-0017,M001,2023-09-20,Day,Tooling Break,28,Critical,B. Patel,Required maintenance team intervention
+INC-0018,M001,2023-09-23,Night,Power Fluctuation,67,Critical,E. Reddy,Resolved within SLA
+INC-0037,M007,2023-09-29,Night,Sensor Malfunction,6,Medium,B. Patel,Machine restarted after cooldown
+INC-0024,M005,2023-10-22,Day,Material Defect,20,Low,E. Reddy,"Temporary fix applied, needs follow-up"
+INC-0039,M002,2023-10-24,Day,Material Defect,111,Medium,A. Kumar,Recurring issue — escalated to engineering
+INC-0048,M005,2023-10-28,Day,Calibration Error,109,Low,B. Patel,Machine restarted after cooldown
+INC-0040,M009,2023-10-29,Night,Material Defect,87,Critical,A. Kumar,Part replacement needed
+INC-0030,M008,2023-10-31,Day,Calibration Error,112,Medium,D. Singh,Required maintenance team intervention
+INC-0004,M002,2023-11-01,Day,Mechanical Jam,55,High,A. Kumar,Root cause under investigation
+INC-0049,M007,2023-11-04,Night,Calibration Error,57,Critical,B. Patel,Recurring issue — escalated to engineering
+INC-0038,M003,2023-11-12,Day,Sensor Malfunction,103,Low,B. Patel,Root cause under investigation
+INC-0054,M008,2023-11-16,Day,Sensor Malfunction,94,Medium,D. Singh,"Temporary fix applied, needs follow-up"
+INC-0045,M007,2023-11-18,Night,Mechanical Jam,63,Medium,D. Singh,Machine restarted after cooldown
+INC-0047,M005,2023-11-20,Day,Calibration Error,6,Medium,C. Sharma,"Temporary fix applied, needs follow-up"
+INC-0042,M006,2023-11-21,Night,Material Defect,95,High,D. Singh,Resolved with standard procedure
+INC-0025,M008,2023-11-27,Night,Power Fluctuation,54,Low,C. Sharma,"Temporary fix applied, needs follow-up"
+INC-0055,M007,2023-12-07,Night,Conveyor Stop,79,Low,E. Reddy,Root cause under investigation
+INC-0006,M010,2023-12-09,Day,Conveyor Stop,49,Medium,B. Patel,"Temporary fix applied, needs follow-up"
+INC-0043,M001,2023-12-16,Day,Mechanical Jam,108,High,C. Sharma,Root cause under investigation
+INC-0012,M001,2023-12-21,Night,Power Fluctuation,113,High,A. Kumar,Required maintenance team intervention
+INC-0026,M003,2023-12-22,Night,Calibration Error,85,Low,D. Singh,Root cause under investigation
+INC-0033,M005,2023-12-27,Night,Tooling Break,9,Medium,B. Patel,Part replacement needed
+INC-0053,M005,2023-12-31,Day,Calibration Error,58,Low,C. Sharma,Resolved within SLA
