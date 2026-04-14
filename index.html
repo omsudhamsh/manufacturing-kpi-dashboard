@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
         *, *::before, *::after {
             margin: 0; padding: 0; box-sizing: border-box;
@@ -431,6 +432,173 @@
             .header { flex-direction: column; align-items: flex-start; gap: 12px; }
             .kpi-value { font-size: 28px; }
         }
+        /* === UPLOAD MODAL === */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(4, 7, 13, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.active {
+            opacity: 1; pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 540px;
+            padding: 40px;
+            position: relative;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5), 0 0 100px var(--glow-indigo);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border-card);
+            border-radius: 20px;
+            padding: 48px 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: rgba(99, 102, 241, 0.03);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--accent-indigo);
+            background: rgba(99, 102, 241, 0.08);
+            transform: scale(1.02);
+            box-shadow: 0 0 40px var(--glow-indigo);
+        }
+
+        .drop-zone-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .drop-zone-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .drop-zone-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .modal-footer {
+            margin-top: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-fancy {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));
+            color: white;
+            box-shadow: 0 4px 15px var(--glow-indigo);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--glow-indigo);
+            filter: brightness(1.1);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-card);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--border-card-hover);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+        }
+
+        .btn-close-modal {
+            position: absolute;
+            top: 24px; right: 24px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .btn-close-modal:hover { color: var(--text-primary); }
+
+        .header-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            color: var(--text-primary);
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:hover {
+            border-color: var(--border-card-hover);
+            background: var(--bg-card-hover);
+            transform: translateY(-1px);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -441,12 +609,17 @@
                 <div class="header-icon">🏭</div>
                 <div>
                     <h1>Manufacturing KPI Dashboard</h1>
-                    <p class="header-sub">AI4I 2020 Predictive Maintenance · OEE Analytics · 10 Machines · 2023</p>
+                    <p class="header-sub">AI4I 2020 Predictive Maintenance · OEE Analytics</p>
                 </div>
             </div>
-            <div class="header-badge">
-                <span class="pulse"></span>
-                Pipeline Complete
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="header-btn" id="btn-open-upload">
+                    <span>⚡</span> Data Controls
+                </button>
+                <div class="header-badge">
+                    <span class="pulse"></span>
+                    Live Data Mode
+                </div>
             </div>
         </header>
 
@@ -592,422 +765,454 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>Manufacturing KPI Dashboard · Data: AI4I 2020 Predictive Maintenance Dataset · Pipeline: Python + SQLite + Chart.js</p>
+            <p>Manufacturing KPI Dashboard · Built for Portfolio · Interactive OEE Analytics</p>
         </footer>
     </div>
 
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="upload-modal">
+        <div class="modal-card">
+            <button class="btn-close-modal" id="btn-close-upload">×</button>
+            <div class="modal-header">
+                <div class="modal-title">Data Control Center</div>
+                <div class="modal-subtitle">Upload your manufacturing CSV to update the dashboard</div>
+            </div>
+
+            <div class="drop-zone" id="drop-zone">
+                <span class="drop-zone-icon">📊</span>
+                <div class="drop-zone-text">Drop your CSV here or click to browse</div>
+                <div class="drop-zone-hint">Format: <code>cleaned_production.csv</code> (max 10MB)</div>
+                <input type="file" id="file-input" accept=".csv" style="display: none;">
+            </div>
+
+            <div class="modal-footer">
+                <a href="data/cleaned_production.csv" download class="btn-fancy btn-outline" style="text-decoration: none;">
+                    <span>📥</span> Download Template CSV
+                </a>
+                <button class="btn-fancy btn-outline" id="btn-reset-demo">
+                    <span>🔄</span> Restore Demo Data
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // ── Chart.js Global Config ─────────────────────────────────
-        Chart.defaults.color = '#94a3b8';
-        Chart.defaults.borderColor = 'rgba(99, 102, 241, 0.08)';
-        Chart.defaults.font.family = "'Inter', sans-serif";
-        Chart.defaults.font.size = 12;
-        Chart.defaults.plugins.legend.labels.usePointStyle = true;
-        Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
-        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)';
-        Chart.defaults.plugins.tooltip.borderColor = 'rgba(99, 102, 241, 0.2)';
-        Chart.defaults.plugins.tooltip.borderWidth = 1;
-        Chart.defaults.plugins.tooltip.cornerRadius = 10;
-        Chart.defaults.plugins.tooltip.padding = 12;
-        Chart.defaults.plugins.tooltip.titleFont = { weight: '600', size: 13 };
-        Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+        // ── Dashboard Manager ──────────────────────────────────────
+        class DashboardManager {
+            constructor() {
+                this.charts = {};
+                this.data = [];
+                this.demoData = null; // Store initial data for reset
+                this.idealRate = 0.5; // Units per minute
 
-        // ── Data ───────────────────────────────────────────────────
-        const monthlyData = {"2023-01":{"oee":0.8157,"availability":0.9604,"performance":0.8506,"quality":0.9984},"2023-02":{"oee":0.814,"availability":0.9595,"performance":0.8496,"quality":0.9984},"2023-03":{"oee":0.8139,"availability":0.96,"performance":0.8489,"quality":0.9985},"2023-04":{"oee":0.8104,"availability":0.9606,"performance":0.8449,"quality":0.9984},"2023-05":{"oee":0.8136,"availability":0.9597,"performance":0.8492,"quality":0.9984},"2023-06":{"oee":0.8093,"availability":0.9599,"performance":0.8444,"quality":0.9985},"2023-07":{"oee":0.8165,"availability":0.9616,"performance":0.8502,"quality":0.9987},"2023-08":{"oee":0.8145,"availability":0.9602,"performance":0.8497,"quality":0.9984},"2023-09":{"oee":0.8142,"availability":0.9606,"performance":0.8489,"quality":0.9983},"2023-10":{"oee":0.8146,"availability":0.9617,"performance":0.8483,"quality":0.9986},"2023-11":{"oee":0.8153,"availability":0.9589,"performance":0.8517,"quality":0.9984},"2023-12":{"oee":0.8089,"availability":0.9603,"performance":0.8436,"quality":0.9983}};
-        const machineOee = {"M001":0.8151,"M002":0.816,"M003":0.8159,"M004":0.8165,"M005":0.8106,"M006":0.8137,"M007":0.8122,"M008":0.8132,"M009":0.8121,"M010":0.8089};
-        const machineDt = {"M001":19032.4,"M002":19884.6,"M003":18678.3,"M004":19571.4,"M005":19369.5,"M006":17681.1,"M007":19305.0,"M008":18690.6,"M009":19573.5,"M010":18843.2};
-        const failures = {"HDF":115,"PWF":91,"OSF":78,"TWF":46,"RNF":18};
-        const weeklyDefect = {"2023-01-01":0.146,"2023-01-08":0.164,"2023-01-15":0.151,"2023-01-22":0.133,"2023-01-29":0.15,"2023-02-05":0.196,"2023-02-12":0.178,"2023-02-19":0.148,"2023-02-26":0.125,"2023-03-05":0.13,"2023-03-12":0.117,"2023-03-19":0.169,"2023-03-26":0.144,"2023-04-02":0.153,"2023-04-09":0.157,"2023-04-16":0.187,"2023-04-23":0.151,"2023-04-30":0.142,"2023-05-07":0.143,"2023-05-14":0.165,"2023-05-21":0.127,"2023-05-28":0.178,"2023-06-04":0.166,"2023-06-11":0.164,"2023-06-18":0.092,"2023-06-25":0.139,"2023-07-02":0.187,"2023-07-09":0.108,"2023-07-16":0.116,"2023-07-23":0.184,"2023-07-30":0.108,"2023-08-06":0.14,"2023-08-13":0.173,"2023-08-20":0.171,"2023-08-27":0.142,"2023-09-03":0.193,"2023-09-10":0.148,"2023-09-17":0.147,"2023-09-24":0.155,"2023-10-01":0.172,"2023-10-08":0.17,"2023-10-15":0.16,"2023-10-22":0.122,"2023-10-29":0.102,"2023-11-05":0.149,"2023-11-12":0.146,"2023-11-19":0.148,"2023-11-26":0.154,"2023-12-03":0.183,"2023-12-10":0.181,"2023-12-17":0.16,"2023-12-24":0.133,"2023-12-31":0.187};
-
-        const monthLabels = Object.keys(monthlyData).map(k => {
-            const [y, m] = k.split('-');
-            return new Date(y, m - 1).toLocaleString('default', { month: 'short' });
-        });
-
-        // ── 1. Monthly OEE Trend ───────────────────────────────────
-        new Chart(document.getElementById('monthlyChart'), {
-            type: 'line',
-            data: {
-                labels: monthLabels,
-                datasets: [
-                    {
-                        label: 'OEE',
-                        data: Object.values(monthlyData).map(d => (d.oee * 100).toFixed(1)),
-                        borderColor: '#818cf8',
-                        backgroundColor: 'rgba(129, 140, 248, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        borderWidth: 2.5,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#818cf8',
-                        pointBorderColor: '#0a0e1a',
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 8,
-                    },
-                    {
-                        label: 'Availability',
-                        data: Object.values(monthlyData).map(d => (d.availability * 100).toFixed(1)),
-                        borderColor: '#34d399',
-                        borderWidth: 1.5,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#34d399',
-                        borderDash: [5, 3],
-                    },
-                    {
-                        label: 'Performance',
-                        data: Object.values(monthlyData).map(d => (d.performance * 100).toFixed(1)),
-                        borderColor: '#fbbf24',
-                        borderWidth: 1.5,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#fbbf24',
-                        borderDash: [5, 3],
-                    },
-                    {
-                        label: 'World-class (85%)',
-                        data: Array(12).fill(85),
-                        borderColor: 'rgba(251, 113, 133, 0.5)',
-                        borderWidth: 1.5,
-                        borderDash: [8, 4],
-                        pointRadius: 0,
-                        fill: false,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                scales: {
-                    y: {
-                        min: 78,
-                        max: 100,
-                        ticks: { callback: v => v + '%' }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%`
-                        }
-                    }
-                }
+                this.init();
             }
-        });
 
-        // ── 2. OEE by Machine ──────────────────────────────────────
-        const machineIds = Object.keys(machineOee);
-        const machineOeeVals = Object.values(machineOee).map(v => (v * 100).toFixed(1));
-        const avgOee = 81.3;
+            async init() {
+                // 1. Initial Data Load
+                this.demoData = {
+                    monthly: {"2023-01":{"oee":0.8157,"availability":0.9604,"performance":0.8506,"quality":0.9984},"2023-02":{"oee":0.814,"availability":0.9595,"performance":0.8496,"quality":0.9984},"2023-03":{"oee":0.8139,"availability":0.96,"performance":0.8489,"quality":0.9985},"2023-04":{"oee":0.8104,"availability":0.9606,"performance":0.8449,"quality":0.9984},"2023-05":{"oee":0.8136,"availability":0.9597,"performance":0.8492,"quality":0.9984},"2023-06":{"oee":0.8093,"availability":0.9599,"performance":0.8444,"quality":0.9985},"2023-07":{"oee":0.8165,"availability":0.9616,"performance":0.8502,"quality":0.9987},"2023-08":{"oee":0.8145,"availability":0.9602,"performance":0.8497,"quality":0.9984},"2023-09":{"oee":0.8142,"availability":0.9606,"performance":0.8489,"quality":0.9983},"2023-10":{"oee":0.8146,"availability":0.9617,"performance":0.8483,"quality":0.9986},"2023-11":{"oee":0.8153,"availability":0.9589,"performance":0.8517,"quality":0.9984},"2023-12":{"oee":0.8089,"availability":0.9603,"performance":0.8436,"quality":0.9983}},
+                    machineOee: {"M001":0.8151,"M002":0.816,"M003":0.8159,"M004":0.8165,"M005":0.8106,"M006":0.8137,"M007":0.8122,"M008":0.8132,"M009":0.8121,"M010":0.8089},
+                    machineDt: {"M001":19032.4,"M002":19884.6,"M003":18678.3,"M004":19571.4,"M005":19369.5,"M006":17681.1,"M007":19305.0,"M008":18690.6,"M009":19573.5,"M010":18843.2},
+                    failures: {"HDF":115,"PWF":91,"OSF":78,"TWF":46,"RNF":18},
+                    weeklyDefect: {"2023-01-01":0.146,"2023-01-08":0.164,"2023-01-15":0.151,"2023-01-22":0.133,"2023-01-29":0.15,"2023-02-05":0.196,"2023-02-12":0.178,"2023-02-19":0.148,"2023-02-26":0.125,"2023-03-05":0.13,"2023-03-12":0.117,"2023-03-19":0.169,"2023-03-26":0.144,"2023-04-02":0.153,"2023-04-09":0.157,"2023-04-16":0.187,"2023-04-23":0.151,"2023-04-30":0.142,"2023-05-07":0.143,"2023-05-14":0.165,"2023-05-21":0.127,"2023-05-28":0.178,"2023-06-04":0.166,"2023-06-11":0.164,"2023-06-18":0.092,"2023-06-25":0.139,"2023-07-02":0.187,"2023-07-09":0.108,"2023-07-16":0.116,"2023-07-23":0.184,"2023-07-30":0.108,"2023-08-06":0.14,"2023-08-13":0.173,"2023-08-20":0.171,"2023-08-27":0.142,"2023-09-03":0.193,"2023-09-10":0.148,"2023-09-17":0.147,"2023-09-24":0.155,"2023-10-01":0.172,"2023-10-08":0.17,"2023-10-15":0.16,"2023-10-22":0.122,"2023-10-29":0.102,"2023-11-05":0.149,"2023-11-12":0.146,"2023-11-19":0.148,"2023-11-26":0.154,"2023-12-03":0.183,"2023-12-10":0.181,"2023-12-17":0.16,"2023-12-24":0.133,"2023-12-31":0.187},
+                    kpis: { oee: 81.3, avail: 96.0, perf: 84.8, qual: 99.8, units: 1955192, defects: 2972, downtime: 190630 },
+                    shifts: [
+                        { name: 'Day', icon: '☀️', count: 5476, downtime: 19.1, units: 195.5, oee: 81.0 },
+                        { name: 'Night', icon: '🌙', count: 4524, downtime: 19.0, units: 195.5, oee: 81.0 }
+                    ]
+                };
 
-        new Chart(document.getElementById('machineOeeChart'), {
-            type: 'bar',
-            data: {
-                labels: machineIds,
-                datasets: [
-                    {
-                        label: 'OEE',
-                        data: machineOeeVals,
-                        backgroundColor: machineOeeVals.map(v =>
-                            v >= 85 ? 'rgba(52, 211, 153, 0.7)' :
-                            v >= 80 ? 'rgba(129, 140, 248, 0.7)' :
-                            'rgba(251, 113, 133, 0.7)'
-                        ),
-                        borderColor: machineOeeVals.map(v =>
-                            v >= 85 ? '#34d399' :
-                            v >= 80 ? '#818cf8' :
-                            '#fb7185'
-                        ),
-                        borderWidth: 1.5,
-                        borderRadius: 6,
-                        borderSkipped: false,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: { label: ctx => `OEE: ${ctx.parsed.y}%` }
-                    },
-                    annotation: undefined,
-                },
-                scales: {
-                    y: {
-                        min: 78,
-                        max: 84,
-                        ticks: { callback: v => v + '%' }
-                    }
-                }
-            },
-            plugins: [{
-                afterDraw(chart) {
-                    const ctx = chart.ctx;
-                    const yAxis = chart.scales.y;
-                    const xAxis = chart.scales.x;
-                    // Plant avg line
-                    const yAvg = yAxis.getPixelForValue(avgOee);
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.setLineDash([6, 4]);
-                    ctx.strokeStyle = 'rgba(251, 113, 133, 0.6)';
-                    ctx.lineWidth = 1.5;
-                    ctx.moveTo(xAxis.left, yAvg);
-                    ctx.lineTo(xAxis.right, yAvg);
-                    ctx.stroke();
-                    ctx.fillStyle = 'rgba(251, 113, 133, 0.8)';
-                    ctx.font = '11px Inter';
-                    ctx.fillText(`Plant Avg: ${avgOee}%`, xAxis.right - 90, yAvg - 6);
-                    ctx.restore();
-                }
-            }]
-        });
-
-        // ── 3. Failure Pareto ──────────────────────────────────────
-        const failureLabels = { HDF: 'Heat Dissipation', PWF: 'Power Failure', OSF: 'Overstrain', TWF: 'Tool Wear', RNF: 'Random' };
-        const failKeys = Object.keys(failures);
-        const failVals = Object.values(failures);
-        const totalFail = failVals.reduce((a, b) => a + b, 0);
-        let cumulative = 0;
-        const cumulativeData = failVals.map(v => {
-            cumulative += v;
-            return ((cumulative / totalFail) * 100).toFixed(1);
-        });
-
-        new Chart(document.getElementById('failureChart'), {
-            type: 'bar',
-            data: {
-                labels: failKeys.map(k => failureLabels[k] || k),
-                datasets: [
-                    {
-                        label: 'Count',
-                        data: failVals,
-                        backgroundColor: [
-                            'rgba(251, 113, 133, 0.75)',
-                            'rgba(251, 191, 36, 0.75)',
-                            'rgba(129, 140, 248, 0.75)',
-                            'rgba(96, 165, 250, 0.75)',
-                            'rgba(52, 211, 153, 0.75)',
-                        ],
-                        borderColor: ['#fb7185', '#fbbf24', '#818cf8', '#60a5fa', '#34d399'],
-                        borderWidth: 1.5,
-                        borderRadius: 6,
-                        borderSkipped: false,
-                        yAxisID: 'y',
-                    },
-                    {
-                        label: 'Cumulative %',
-                        data: cumulativeData,
-                        type: 'line',
-                        borderColor: '#22d3ee',
-                        backgroundColor: 'rgba(34, 211, 238, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#22d3ee',
-                        tension: 0.3,
-                        yAxisID: 'y1',
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, position: 'left', ticks: { stepSize: 20 } },
-                    y1: {
-                        beginAtZero: true,
-                        max: 100,
-                        position: 'right',
-                        grid: { drawOnChartArea: false },
-                        ticks: { callback: v => v + '%' }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => ctx.dataset.label === 'Cumulative %'
-                                ? `Cumulative: ${ctx.parsed.y}%`
-                                : `Failures: ${ctx.parsed.y}`
-                        }
-                    }
-                }
+                this.setupChartConfigs();
+                this.setupEventListeners();
+                this.render(this.demoData);
             }
-        });
 
-        // ── 4. Downtime by Machine ─────────────────────────────────
-        const dtSorted = Object.entries(machineDt).sort((a, b) => b[1] - a[1]);
-
-        new Chart(document.getElementById('downtimeChart'), {
-            type: 'bar',
-            data: {
-                labels: dtSorted.map(d => d[0]),
-                datasets: [{
-                    label: 'Downtime (min)',
-                    data: dtSorted.map(d => d[1]),
-                    backgroundColor: dtSorted.map((_, i) => {
-                        const ratio = i / (dtSorted.length - 1);
-                        return `rgba(${Math.round(251 - ratio * 200)}, ${Math.round(113 + ratio * 100)}, ${Math.round(133 + ratio * 50)}, 0.7)`;
-                    }),
-                    borderColor: dtSorted.map((_, i) => {
-                        const ratio = i / (dtSorted.length - 1);
-                        return `rgba(${Math.round(251 - ratio * 200)}, ${Math.round(113 + ratio * 100)}, ${Math.round(133 + ratio * 50)}, 1)`;
-                    }),
-                    borderWidth: 1.5,
-                    borderRadius: 6,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: { label: ctx => `${ctx.parsed.x.toLocaleString()} min` }
-                    }
-                },
-                scales: {
-                    x: { ticks: { callback: v => (v / 1000).toFixed(0) + 'k' } }
-                }
+            setupChartConfigs() {
+                // Chart.js Global Settings
+                Chart.defaults.color = '#94a3b8';
+                Chart.defaults.borderColor = 'rgba(99, 102, 241, 0.08)';
+                Chart.defaults.font.family = "'Inter', sans-serif";
+                Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)';
+                Chart.defaults.plugins.tooltip.borderColor = 'rgba(99, 102, 241, 0.2)';
+                Chart.defaults.plugins.tooltip.borderWidth = 1;
+                Chart.defaults.plugins.tooltip.cornerRadius = 10;
             }
-        });
 
-        // ── 5. Weekly Defect Rate ──────────────────────────────────
-        const weekKeys = Object.keys(weeklyDefect);
-        const weekVals = Object.values(weeklyDefect);
-        const weekLabels = weekKeys.map(k => {
-            const d = new Date(k);
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        });
+            setupEventListeners() {
+                const btnOpen = document.getElementById('btn-open-upload');
+                const btnClose = document.getElementById('btn-close-upload');
+                const modal = document.getElementById('upload-modal');
+                const dropZone = document.getElementById('drop-zone');
+                const fileInput = document.getElementById('file-input');
+                const btnReset = document.getElementById('btn-reset-demo');
 
-        new Chart(document.getElementById('defectChart'), {
-            type: 'line',
-            data: {
-                labels: weekLabels,
-                datasets: [{
-                    label: 'Defect Rate',
-                    data: weekVals,
-                    borderColor: '#fb7185',
-                    backgroundColor: 'rgba(251, 113, 133, 0.08)',
-                    fill: true,
-                    tension: 0.35,
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: '#fb7185',
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: { label: ctx => `Defect Rate: ${ctx.parsed.y.toFixed(3)}%` }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            maxTicksLimit: 12,
-                            maxRotation: 0,
-                        }
+                // Modal Toggle
+                btnOpen.onclick = () => modal.classList.add('active');
+                btnClose.onclick = () => modal.classList.remove('active');
+                window.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
+
+                // Drop Zone
+                dropZone.onclick = () => fileInput.click();
+                dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
+                dropZone.ondragleave = () => dropZone.classList.remove('dragover');
+                dropZone.ondrop = (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                    const file = e.dataTransfer.files[0];
+                    if (file) this.handleFileUpload(file);
+                };
+
+                fileInput.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) this.handleFileUpload(file);
+                };
+
+                btnReset.onclick = () => {
+                    this.render(this.demoData);
+                    modal.classList.remove('active');
+                };
+            }
+
+            handleFileUpload(file) {
+                if (!file.name.endsWith('.csv')) {
+                    alert('Please upload a valid CSV file.');
+                    return;
+                }
+
+                Papa.parse(file, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true,
+                    complete: (results) => {
+                        this.processNewData(results.data);
+                        document.getElementById('upload-modal').classList.remove('active');
                     },
-                    y: {
-                        ticks: { callback: v => v.toFixed(2) + '%' }
+                    error: (err) => {
+                        console.error('CSV Parsing Error:', err);
+                        alert('Error parsing CSV. Please check formatting.');
                     }
-                }
-            }
-        });
-
-        // ── 6. OEE Radar ───────────────────────────────────────────
-        new Chart(document.getElementById('radarChart'), {
-            type: 'radar',
-            data: {
-                labels: ['Availability', 'Performance', 'Quality'],
-                datasets: [
-                    {
-                        label: 'Actual',
-                        data: [96.0, 84.8, 99.8],
-                        backgroundColor: 'rgba(129, 140, 248, 0.15)',
-                        borderColor: '#818cf8',
-                        borderWidth: 2.5,
-                        pointBackgroundColor: '#818cf8',
-                        pointBorderColor: '#0a0e1a',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                    },
-                    {
-                        label: 'Target',
-                        data: [90, 95, 99],
-                        backgroundColor: 'rgba(52, 211, 153, 0.08)',
-                        borderColor: 'rgba(52, 211, 153, 0.4)',
-                        borderWidth: 1.5,
-                        borderDash: [5, 3],
-                        pointBackgroundColor: 'rgba(52, 211, 153, 0.6)',
-                        pointRadius: 3,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        beginAtZero: false,
-                        min: 75,
-                        max: 100,
-                        ticks: {
-                            stepSize: 5,
-                            color: '#64748b',
-                            backdropColor: 'transparent',
-                        },
-                        grid: { color: 'rgba(99, 102, 241, 0.1)' },
-                        angleLines: { color: 'rgba(99, 102, 241, 0.1)' },
-                        pointLabels: {
-                            font: { size: 13, weight: '600' },
-                            color: '#e2e8f0',
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.r}%` }
-                    }
-                }
-            }
-        });
-
-        // ── Animate KPI Bars & Counters ────────────────────────────
-        window.addEventListener('load', () => {
-            // Animate bars
-            setTimeout(() => {
-                document.querySelectorAll('.kpi-bar-fill').forEach(bar => {
-                    bar.style.width = bar.dataset.width + '%';
                 });
-            }, 300);
+            }
 
-            // Animate counters
-            document.querySelectorAll('.count-up').forEach(el => {
+            processNewData(rows) {
+                // Verification: check for required columns
+                const required = ['shift_date', 'machine_id', 'planned_time_min', 'run_time_min', 'units_produced', 'defects'];
+                const missing = required.filter(col => !(col in (rows[0] || {})));
+                if (missing.length > 0) {
+                    alert(`Missing columns in CSV: ${missing.join(', ')}`);
+                    return;
+                }
+
+                // 1. Recalculate OEE & Components for all rows
+                rows.forEach(r => {
+                    r.availability = Math.min(r.run_time_min / r.planned_time_min, 1);
+                    r.performance = Math.min(r.units_produced / (r.run_time_min * this.idealRate), 1);
+                    r.quality = Math.min((r.units_produced - r.defects) / Math.max(r.units_produced, 1), 1);
+                    r.oee = r.availability * r.performance * r.quality;
+                });
+
+                // 2. Aggregate Data
+                const processed = {
+                    monthly: {},
+                    machineOee: {},
+                    machineDt: {},
+                    failures: {},
+                    weeklyDefect: {},
+                    shifts: {
+                        'Day': { units: 0, dt: 0, count: 0, oee: 0 },
+                        'Night': { units: 0, dt: 0, count: 0, oee: 0 }
+                    },
+                    totals: { oee: 0, avail: 0, perf: 0, qual: 0, units: 0, defects: 0, downtime: 0, rows: 0 }
+                };
+
+                rows.forEach(r => {
+                    const date = new Date(r.shift_date);
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    
+                    // Monthly
+                    if (!processed.monthly[monthKey]) processed.monthly[monthKey] = { oee: [], avail: [], perf: [], qual: [] };
+                    processed.monthly[monthKey].oee.push(r.oee);
+                    processed.monthly[monthKey].avail.push(r.availability);
+                    processed.monthly[monthKey].perf.push(r.performance);
+                    processed.monthly[monthKey].qual.push(r.quality);
+
+                    // Machine
+                    if (!processed.machineOee[r.machine_id]) processed.machineOee[r.machine_id] = [];
+                    processed.machineOee[r.machine_id].push(r.oee);
+                    processed.machineDt[r.machine_id] = (processed.machineDt[r.machine_id] || 0) + (r.downtime_min || 0);
+
+                    // Failures
+                    if (r.failure_type) {
+                        processed.failures[r.failure_type] = (processed.failures[r.failure_type] || 0) + 1;
+                    }
+
+                    // Weekly
+                    const weekKey = this.getWeekKey(date);
+                    if (!processed.weeklyDefect[weekKey]) processed.weeklyDefect[weekKey] = { def: 0, prod: 0 };
+                    processed.weeklyDefect[weekKey].def += r.defects;
+                    processed.weeklyDefect[weekKey].prod += r.units_produced;
+
+                    // Shifts
+                    const s = processed.shifts[r.shift] || processed.shifts['Day'];
+                    s.units += r.units_produced;
+                    s.dt += (r.downtime_min || 0);
+                    s.oee += r.oee;
+                    s.count++;
+
+                    // Totals
+                    processed.totals.oee += r.oee;
+                    processed.totals.avail += r.availability;
+                    processed.totals.perf += r.performance;
+                    processed.totals.qual += r.quality;
+                    processed.totals.units += r.units_produced;
+                    processed.totals.defects += r.defects;
+                    processed.totals.downtime += (r.downtime_min || 0);
+                    processed.totals.rows++;
+                });
+
+                // 3. Finalize Aggregations
+                const final = {
+                    monthly: {},
+                    machineOee: {},
+                    machineDt: processed.machineDt,
+                    failures: processed.failures,
+                    weeklyDefect: {},
+                    shifts: [],
+                    kpis: {
+                        oee: (processed.totals.oee / processed.totals.rows * 100).toFixed(1),
+                        avail: (processed.totals.avail / processed.totals.rows * 100).toFixed(1),
+                        perf: (processed.totals.perf / processed.totals.rows * 100).toFixed(1),
+                        qual: (processed.totals.qual / processed.totals.rows * 100).toFixed(1),
+                        units: processed.totals.units,
+                        defects: processed.totals.defects,
+                        downtime: Math.round(processed.totals.downtime)
+                    }
+                };
+
+                for (let k in processed.monthly) {
+                    const m = processed.monthly[k];
+                    final.monthly[k] = {
+                        oee: m.oee.reduce((a, b) => a + b) / m.oee.length,
+                        availability: m.avail.reduce((a, b) => a + b) / m.avail.length,
+                        performance: m.perf.reduce((a, b) => a + b) / m.perf.length,
+                        quality: m.qual.reduce((a, b) => a + b) / m.qual.length
+                    };
+                }
+
+                for (let k in processed.machineOee) {
+                    final.machineOee[k] = processed.machineOee[k].reduce((a, b) => a + b) / processed.machineOee[k].length;
+                }
+
+                for (let k in processed.weeklyDefect) {
+                    const w = processed.weeklyDefect[k];
+                    final.weeklyDefect[k] = (w.def / w.prod * 100);
+                }
+
+                final.shifts = Object.entries(processed.shifts).map(([name, s]) => ({
+                    name,
+                    icon: name === 'Day' ? '☀️' : '🌙',
+                    count: s.count,
+                    downtime: (s.dt / s.count).toFixed(1),
+                    units: (s.units / s.count).toFixed(1),
+                    oee: (s.oee / s.count * 100).toFixed(1)
+                }));
+
+                this.render(final);
+            }
+
+            getWeekKey(date) {
+                const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                const dayNum = d.getUTCDay() || 7;
+                d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                return `${d.getUTCFullYear()}-W${weekNo}`;
+            }
+
+            render(data) {
+                // Update KPI Cards
+                this.updateKPIs(data.kpis);
+                
+                // Update Shift Table
+                this.updateShiftTable(data.shifts);
+
+                // Update Charts
+                this.renderMonthlyChart(data.monthly);
+                this.renderMachineOeeChart(data.machineOee, data.kpis.oee);
+                this.renderFailureChart(data.failures);
+                this.renderDowntimeChart(data.machineDt);
+                this.renderDefectChart(data.weeklyDefect);
+                this.renderRadarChart(data.kpis);
+
+                // Animation for bars
+                setTimeout(() => {
+                    document.querySelectorAll('.kpi-bar-fill').forEach(bar => {
+                        bar.style.width = bar.dataset.width + '%';
+                    });
+                }, 300);
+            }
+
+            updateKPIs(kpis) {
+                const mappings = [
+                    { id: 'kpi-oee', val: kpis.oee },
+                    { id: 'kpi-avail', val: kpis.avail },
+                    { id: 'kpi-perf', val: kpis.perf },
+                    { id: 'kpi-qual', val: kpis.qual }
+                ];
+
+                mappings.forEach(m => {
+                    const el = document.querySelector(`#${m.id} .count-up`);
+                    if (el) {
+                        el.dataset.target = m.val;
+                        this.animateCounter(el);
+                    }
+                    const bar = document.querySelector(`#${m.id} .kpi-bar-fill`);
+                    if (bar) bar.dataset.width = m.val;
+                });
+
+                // Stat Pills
+                const pills = document.querySelectorAll('.stat-pill-value');
+                pills[0].textContent = kpis.units.toLocaleString();
+                pills[1].textContent = `${kpis.defects.toLocaleString()} (${((kpis.defects/kpis.units)*100).toFixed(2)}%)`;
+                pills[2].textContent = kpis.downtime.toLocaleString();
+            }
+
+            animateCounter(el) {
                 const target = parseFloat(el.dataset.target);
-                const duration = 1800;
+                const duration = 1500;
                 const start = performance.now();
+                const currentVal = parseFloat(el.textContent) || 0;
 
-                function update(now) {
+                const step = (now) => {
                     const elapsed = now - start;
                     const progress = Math.min(elapsed / duration, 1);
                     const eased = 1 - Math.pow(1 - progress, 3);
-                    const current = (target * eased).toFixed(1);
+                    const current = (currentVal + (target - currentVal) * eased).toFixed(1);
                     el.textContent = current;
-                    if (progress < 1) requestAnimationFrame(update);
+                    if (progress < 1) requestAnimationFrame(step);
                     else el.textContent = target.toFixed(1);
-                }
-                requestAnimationFrame(update);
-            });
+                };
+                requestAnimationFrame(step);
+            }
+
+            updateShiftTable(shifts) {
+                const tbody = document.querySelector('.data-table tbody');
+                tbody.innerHTML = shifts.map(s => `
+                    <tr>
+                        <td><span class="mono">${s.icon} ${s.name}</span></td>
+                        <td class="mono">${s.count.toLocaleString()}</td>
+                        <td class="mono">${s.downtime} min</td>
+                        <td class="mono">${s.units}</td>
+                        <td class="mono">${s.oee}%</td>
+                        <td><span class="severity-badge ${parseFloat(s.oee) >= 80 ? 'medium' : 'high'}">${parseFloat(s.oee) >= 80 ? 'On Target' : 'Underperf'}</span></td>
+                    </tr>
+                `).join('');
+            }
+
+            // ── Chart Rendering Methods ────────────────────────────
+
+            renderMonthlyChart(data) {
+                const labels = Object.keys(data).map(k => {
+                    const [y, m] = k.split('-');
+                    return new Date(y, m - 1).toLocaleString('default', { month: 'short' });
+                });
+                const values = Object.values(data);
+
+                this.updateChart('monthlyChart', 'line', {
+                    labels,
+                    datasets: [
+                        { label: 'OEE', data: values.map(d => (d.oee * 100).toFixed(1)), borderColor: '#818cf8', backgroundColor: 'rgba(129, 140, 248, 0.1)', fill: true, tension: 0.4, borderWidth: 2.5 },
+                        { label: 'Availability', data: values.map(d => (d.availability * 100).toFixed(1)), borderColor: '#34d399', borderWidth: 1.5, tension: 0.4, pointRadius: 0, borderDash: [5, 3] },
+                        { label: 'Performance', data: values.map(d => (d.performance * 100).toFixed(1)), borderColor: '#fbbf24', borderWidth: 1.5, tension: 0.4, pointRadius: 0, borderDash: [5, 3] }
+                    ]
+                }, { scales: { y: { min: 70, max: 100, ticks: { callback: v => v + '%' } } } });
+            }
+
+            renderMachineOeeChart(data, plantAvg) {
+                const entries = Object.entries(data);
+                const labels = entries.map(e => e[0]);
+                const vals = entries.map(e => (e[1] * 100).toFixed(1));
+
+                this.updateChart('machineOeeChart', 'bar', {
+                    labels,
+                    datasets: [{
+                        label: 'OEE',
+                        data: vals,
+                        backgroundColor: vals.map(v => v >= 85 ? 'rgba(52, 211, 153, 0.7)' : v >= 80 ? 'rgba(129, 140, 248, 0.7)' : 'rgba(251, 113, 133, 0.7)'),
+                        borderRadius: 6
+                    }]
+                }, { scales: { y: { min: 75, max: 85, ticks: { callback: v => v + '%' } } } });
+            }
+
+            renderFailureChart(data) {
+                const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((sum, e) => sum + e[1], 0);
+                let cumCount = 0;
+
+                this.updateChart('failureChart', 'bar', {
+                    labels: sorted.map(e => e[0]),
+                    datasets: [
+                        { label: 'Count', data: sorted.map(e => e[1]), backgroundColor: 'rgba(251, 113, 133, 0.75)', borderRadius: 6, yAxisID: 'y' },
+                        { label: 'Cumulative %', data: sorted.map(e => { cumCount += e[1]; return total > 0 ? (cumCount / total * 100).toFixed(1) : 0; }), type: 'line', borderColor: '#22d3ee', tension: 0.3, yAxisID: 'y1' }
+                    ]
+                }, { scales: { y: { beginAtZero: true }, y1: { max: 100, position: 'right', grid: { display: false } } } });
+            }
+
+            renderDowntimeChart(data) {
+                const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+                this.updateChart('downtimeChart', 'bar', {
+                    labels: sorted.map(e => e[0]),
+                    datasets: [{ label: 'Downtime (min)', data: sorted.map(e => e[1]), backgroundColor: 'rgba(99, 102, 241, 0.7)', borderRadius: 6 }]
+                }, { indexAxis: 'y', scales: { x: { ticks: { callback: v => (v / 1000).toFixed(0) + 'k' } } } });
+            }
+
+            renderDefectChart(data) {
+                const sorted = Object.entries(data).sort((a, b) => new Date(a[0]) - new Date(b[0]));
+                this.updateChart('defectChart', 'line', {
+                    labels: sorted.map(e => e[0]),
+                    datasets: [{ label: 'Defect Rate', data: sorted.map(e => e[1].toFixed(3)), borderColor: '#fb7185', fill: true, backgroundColor: 'rgba(251, 113, 133, 0.05)', tension: 0.3 }]
+                }, { scales: { y: { ticks: { callback: v => v + '%' } } } });
+            }
+
+            renderRadarChart(kpis) {
+                this.updateChart('radarChart', 'radar', {
+                    labels: ['Availability', 'Performance', 'Quality'],
+                    datasets: [
+                        { label: 'Actual', data: [kpis.avail, kpis.perf, kpis.qual], backgroundColor: 'rgba(129, 140, 248, 0.15)', borderColor: '#818cf8', pointRadius: 4 },
+                        { label: 'Target', data: [90, 95, 99], borderColor: 'rgba(52, 211, 153, 0.4)', borderDash: [5, 3], pointRadius: 0 }
+                    ]
+                }, { scales: { r: { min: 70, max: 100, ticks: { stepSize: 10 } } } });
+            }
+
+            updateChart(id, type, data, options = {}) {
+                if (this.charts[id]) this.charts[id].destroy();
+                const ctx = document.getElementById(id).getContext('2d');
+                this.charts[id] = new Chart(ctx, {
+                    type,
+                    data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 1000, easing: 'easeOutQuart' },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyleWidth: 8,
+                                    font: { size: 11 }
+                                }
+                            }
+                        },
+                        ...options
+                    }
+                });
+            }
+        }
+
+        // Initialize on Load
+        window.addEventListener('load', () => {
+            window.dashboard = new DashboardManager();
         });
     </script>
 </body>
